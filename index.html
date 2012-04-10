@@ -76,7 +76,7 @@
 				<section>
 					<h2>File</h2>
 					<div>
-						<input type="file" name="file" disabled><br>
+						<input type="file" name="file"><br>
 					</div>
 				</section>
 				<section>
@@ -86,19 +86,19 @@
 							<tr>
 							<td>Image width:
 							<td><input type="number" min="1" step="1"
-								name="width" value="640" disabled>
+								name="width" value="640">
 							<tr>
 							<td>Image height:
 							<td><input type="number" min="1" step="1"
-								name="height" value="480" disabled>
-							<tr>
-							<td>Default alpha (0-255):
-							<td><input type="number" min="0" max="255" step="1"
-								name="alpha" value="255" disabled>
+								name="height" value="480">
 							<tr>
 							<td>Skip input bytes:
 							<td><input type="number" min="0" step="1"
-								name="skipbytes" value="0" disabled>
+								name="skipbytes" value="0">
+							<tr>
+							<td>Default alpha (0-255):
+							<td><input type="range" min="0" max="255" step="1"
+								name="alpha" value="255">
 							<tr>
 							<td>Zoom:
 							<td><input type="range" name="zoom"
@@ -605,9 +605,6 @@ delan@azabani.com</a>.
 					});
 					$('input').forEach(function(i) {
 						i.addEventListener('change', invoke_render, false);
-					});
-					$('input').forEach(function(i) {
-						i.disabled = false;
 					});
 				},
 				render_done: function(m) {
