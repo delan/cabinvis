@@ -118,7 +118,7 @@
 					<h2>About</h2>
 					<div>
 						<p>
-Cabinvis is a <span title="Single file, under 15 KB and 600 SLOC!">small</span>
+Cabinvis is a <span title="Single file, under 20 KB and 1000 SLOC!">small</span>
 web application that allows you to render the contents of files as images. You
 can use this to interpret raw image data, or to simply make a 'birds-eye'
 observation of patterns in the contents of a file.
@@ -347,6 +347,134 @@ delan@azabani.com</a>.
 						if (y < 0) {
 							y = out.height - 1;
 							x--;
+						}
+					};
+				},
+				'Horizontal zigzag, starting from top left': function(o) {
+					var out = o, x = 0, y = 0, d = 1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x += d;
+						if (x < 0 || x == out.width) {
+							y++;
+							x -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Horizontal zigzag, starting from top right': function(o) {
+					var out = o, x = out.width - 1, y = 0, d = -1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x += d;
+						if (x < 0 || x == out.width) {
+							y++;
+							x -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Horizontal zigzag, starting from bottom left': function(o) {
+					var out = o, x = 0, y = out.height - 1, d = 1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x += d;
+						if (x < 0 || x == out.width) {
+							y--;
+							x -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Horizontal zigzag, starting from bottom right': function(o) {
+					var out = o, x = out.width - 1, y = out.height - 1, d = -1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x += d;
+						if (x < 0 || x == out.width) {
+							y--;
+							x -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Vertical zigzag, starting from top left': function(o) {
+					var out = o, x = 0, y = 0, d = 1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y += d;
+						if (y < 0 || y == out.height) {
+							x++;
+							y -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Vertical zigzag, starting from top right': function(o) {
+					var out = o, x = out.width - 1, y = 0, d = 1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y += d;
+						if (y < 0 || y == out.height) {
+							x--;
+							y -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Vertical zigzag, starting from bottom left': function(o) {
+					var out = o, x = 0, y = out.height - 1, d = -1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y += d;
+						if (y < 0 || y == out.height) {
+							x++;
+							y -= d;
+							d *= -1;
+						}
+					};
+				},
+				'Vertical zigzag, starting from bottom right': function(o) {
+					var out = o, x = out.width - 1, y = out.height - 1, d = -1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y += d;
+						if (y < 0 || y == out.height) {
+							x--;
+							y -= d;
+							d *= -1;
 						}
 					};
 				},
