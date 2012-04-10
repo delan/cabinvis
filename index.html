@@ -125,6 +125,11 @@ web application that allows you to render the contents of files as images. You
 can use this to interpret raw image data, or to simply make a 'birds-eye'
 observation of patterns in the contents of a file.
 						<p>
+Inspired by Aldo Cortesi's blog post
+<a href="http://corte.si/posts/visualisation/binvis/index.html">Visualizing
+binaries with space-filling curves</a>, I decided to create a utility that would
+allow me to do this, on the convenient platform that is the web.
+						<p>
 It uses canvas for the image output, web workers for processing, the FileReader
 interface to access files, and the BlobBuilder interface to include the worker
 script inside the same file as everything else. It is currently tested and
@@ -478,6 +483,51 @@ delan@azabani.com</a>.
 							y -= d;
 							d *= -1;
 						}
+					};
+				},
+				'Hilbert curve': function(o) {
+					/* hilbert and rot functions from Wikipedia/Hilbert_curve;
+						direct JavaScript ports of d2xy and rot respectively */
+					function hilbert(n, d) {
+						var rx, ry, s, t = d, x = 0, y = 0;
+						for (s = 1; s < n; s *= 2) {
+							rx = 1 & (t / 2);
+							ry = 1 & (t ^ rx);
+							var rotresult = rot(s, x, y, rx, ry);
+							x = rotresult[0];
+							y = rotresult[1];
+							x += s * rx;
+							y += s * ry;
+							t /= 4;
+						}
+						return [x, y];
+					}
+					function rot(n, x, y, rx, ry) {
+						var t;
+						if (ry == 0) {
+							if (rx == 1) {
+								x = n - 1 - x;
+								y = n - 1 - y;
+							}
+							t = x;
+							x = y;
+							y = t;
+						}
+						return [x, y];
+					}
+					var out = o, count = 0;
+					/* find the highest power of two that is less than or
+						equal to the smaller of the two dimensions */
+					var sidelength = Math.pow(2, Math.floor(
+						Math.log(Math.min(out.width, out.height)) /
+						Math.log(2)));
+					return function(r, g, b, a) {
+						var c = hilbert(sidelength, count++);
+						var i = 4 * c[1] * out.width + 4 * c[0];
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
 					};
 				},
 			};
