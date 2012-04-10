@@ -145,11 +145,11 @@ delan@azabani.com</a>.
 							<tr>
 							<td>Zoom:
 							<td><input type="range" name="zoom"
-								min="0.5" max="8" value="1" step="0.5">
+								min="-3" max="3" value="0" step="1">
 								<input type="button" value="✓">
 							<tr>
-							<td colspan="2">From 50% to 800% inclusive, in steps
-								of 50%.
+							<td colspan="2">From 12.5% to 800% inclusive,
+								doubling in each step.
 						</table>
 					</div>
 				</section>
@@ -609,8 +609,9 @@ delan@azabani.com</a>.
 				p.value = 0;
 				c.width = f.width.value;
 				c.height = f.height.value;
-				c.style.width = (f.width.value * f.zoom.value) + 'px';
-				c.style.height = (f.height.value * f.zoom.value) + 'px';
+				var z = Math.pow(2, f.zoom.value);
+				c.style.width = (f.width.value * z) + 'px';
+				c.style.height = (f.height.value * z) + 'px';
 				log('render start requested; loading file');
 				$('input').forEach(function(i) {
 					i.disabled = true;
