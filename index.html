@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Cabinvis</title>
+		<style>
+			* {
+				font-family: sans-serif;
+				font-size: 12px;
+			}
+			code {
+				font-family: monospace;
+			}
+			span {
+				border-bottom: 1px dotted black;
+			}
+			fieldset, #container {
+				margin: 0em;
+				padding: 0em;
+				border: none;
+				position: absolute;
+			}
+			fieldset {
+				width: 32em;
+				left: 1em;
+				top: 1em;
+			}
+			#container {
+				left: 34em;
+				top: 1em;
+				background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAABb59j9AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAABnUlEQVR4nO3bsQ0DIRQFQc5yR%2FTfAdSEWyCxZK9m4tOLVj858ay1zrgw57z5bOy9r76zZ%2B8be6%2Brr%2BBPCJoUQZMiaFIETYqgSRE0KYImRdCkPOecqz%2BFv%2F6HyJ69MVxoYgRNiqBJETQpgiZF0KQImhRBkyJoUt6VP0T27I3hQhMjaFIETYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40KYImRdCkCJoUQZMiaFIETYqgSRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0KYImRdCkeFNoL7XnQpMiaFIETYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40KYImRdCkCJoUQZMiaFIETYqgSRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0KYImRdCkeFNoL7XnQpMiaFIETYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIETcoHt3taUX1tnMMAAAAASUVORK5CYII%3D);
+			}
+			canvas {
+				image-rendering: optimizeSpeed;
+				image-rendering: -moz-crisp-edges;
+				image-rendering: -webkit-optimize-contrast;
+				image-rendering: optimize-contrast;
+			}
+			progress {
+				width: 100%;
+			}
+			td:nth-child(2) {
+				text-align: right;
+			}
+			h1 {
+				font-size: 2em;
+				margin-top: 0em;
+			}
+			h2 {
+				margin: 0em;
+				cursor: pointer;
+			}
+			section {
+				overflow-y: hidden;
+				border: 1px solid black;
+				border-bottom: none;
+				padding: 1em;
+			}
+			section:last-child {
+				border-bottom: 1px solid black;
+			}
+			section div {
+				margin-top: 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<form>
+			<fieldset>
+				<section>
+					<h1>Cabinvis</h1>
+					<div>
+						<progress max="1">
+					</div>
+				</section>
+				<section>
+					<h2>File</h2>
+					<div>
+						<input type="file" name="file" disabled><br>
+					</div>
+				</section>
+				<section>
+					<h2>Settings</h2>
+					<div>
+						<table>
+							<tr>
+							<td>Image width:
+							<td><input type="number" min="1" step="1"
+								name="width" value="640" disabled>
+							<tr>
+							<td>Image height:
+							<td><input type="number" min="1" step="1"
+								name="height" value="480" disabled>
+							<tr>
+							<td>Default alpha (0-255):
+							<td><input type="number" min="0" max="255" step="1"
+								name="alpha" value="255" disabled>
+							<tr>
+							<td>Skip input bytes:
+							<td><input type="number" min="0" step="1"
+								name="skipbytes" value="0" disabled>
+							<tr>
+							<td>Zoom:
+							<td><input type="range" name="zoom"
+								min="0.5" max="8" value="1" step="0.5">
+						</table>
+					</div>
+				</section>
+				<section id="cons_p">
+					<h2>Consumer</h2>
+					<div></div>
+				</section>
+				<section id="prod_p">
+					<h2>Producer</h2>
+					<div></div>
+				</section>
+				<section>
+					<h2>About</h2>
+					<div>
+						<p>
+Cabinvis is a <span title="Single file, under 15 KB and 600 SLOC!">small</span>
+web application that allows you to render the contents of files as images. You
+can use this to interpret raw image data, or to simply make a 'birds-eye'
+observation of patterns in the contents of a file.
+						<p>
+It uses canvas for the image output, web workers for processing, the FileReader
+interface to access files, and the BlobBuilder interface to include the worker
+script inside the same file as everything else. It is currently tested and
+supported in Firefox and Chrome. If you want to use it on Chrome locally, you
+must disable the same-origin policy with <code>--disable-web-security</code>.
+						<p>
+The bulk of the code is divided between 'consumers' and 'producers', which are
+objects with their own internal state. When rendering the image, the chosen
+consumer reads bytes in, and when a pixel is ready, sends it to the chosen
+producer, which draws the pixel onto the canvas in some specified arrangement.
+						<p>
+This program is released under the terms of the MIT license. Please send any
+questions, suggestions or comments to <a href="mailto:delan@azabani.com">
+delan@azabani.com</a>.
+					</div>
+				</section>
+			</fieldset>
+			<div id="container"><canvas></canvas></div>
+		</form>
+		<script id="ws" type="text/x-javascript-worker">
+			function nextbyte(o) {
+				if (!(o.data.length % 65536))
+					postMessage({
+						type: 'worker_progress',
+						value: (o.length - o.data.length) / o.length
+					});
+				var b = o.data.charCodeAt(0);
+				o.data = o.data.substring(1);
+				return b;
+			}
+			function object_keys(o) {
+				var a = [];
+				for (var i in o)
+					a.push(i);
+				return a;
+			}
+			var cons = {
+				'RGB': function(i, o, p, opt) {
+					var s = 0, r, g, x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							switch (s) {
+							case 0: r = x; s++; break;
+							case 1: g = x; s++; break;
+							case 2: p(r, g, x, opt.alpha); s = 0;
+							}
+						}
+					};
+				},
+				'BGR': function(i, o, p, opt) {
+					var s = 0, b, g, x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							switch (s) {
+							case 0: b = x; s++; break;
+							case 1: g = x; s++; break;
+							case 2: p(x, g, b, opt.alpha); s = 0;
+							}
+						}
+					};
+				},
+				'RGBA': function(i, o, p, opt) {
+					var s = 0, r, g, b, x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							switch (s) {
+							case 0: r = x; s++; break;
+							case 1: g = x; s++; break;
+							case 2: b = x; s++; break;
+							case 3: p(r, g, b, x); s = 0;
+							}
+						}
+					};
+				},
+				'RGBX': function(i, o, p, opt) {
+					var s = 0, r, g, b, x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							switch (s) {
+							case 0: r = x; s++; break;
+							case 1: g = x; s++; break;
+							case 2: b = x; s++; break;
+							case 3: p(r, g, b, opt.alpha); s = 0;
+							}
+						}
+					};
+				},
+				'Byte class (zeroes/ones/ASCII/other)':
+					function(i, o, p, opt) {
+					var x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							if (x == 0)
+								p(0, 0, 0, opt.alpha);
+							else if (x == 255)
+								p(255, 255, 255, opt.alpha);
+							else if (x > 31 && x < 127)
+								p(55, 126, 184, opt.alpha);
+							else
+								p(228, 26, 28, opt.alpha);
+						}
+					};
+				},
+				'Byte value as gray level': function(i, o, p, opt) {
+					var x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							p(x, x, x, opt.alpha);
+						}
+					};
+				},
+			};
+			var prod = {
+				'Top to bottom, left to right': function(o) {
+					var out = o, i = 0;
+					return function(r, g, b, a) {
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+					};
+				},
+				'Top to bottom, right to left': function(o) {
+					var out = o, x = o.width - 1, y = 0;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x--;
+						if (x < 0) {
+							x = out.width - 1;
+							y++;
+						}
+					};
+				},
+				'Bottom to top, left to right': function(o) {
+					var out = o, x = 0, y = o.height - 1;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						x++;
+						if (x == out.width) {
+							x = 0;
+							y--;
+						}
+					};
+				},
+				'Bottom to top, right to left': function(o) {
+					var out = o, i = o.width * o.height * 4 - 1;
+					return function(r, g, b, a) {
+						out.data[i--] = a;
+						out.data[i--] = b;
+						out.data[i--] = g;
+						out.data[i--] = r;
+					};
+				},
+				'Left to right, top to bottom': function(o) {
+					var out = o, x = 0, y = 0;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y++;
+						if (y == out.height) {
+							y = 0;
+							x++;
+						}
+					};
+				},
+				'Left to right, bottom to top': function(o) {
+					var out = o, x = 0, y = 0;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y--;
+						if (y < 0) {
+							y = out.height - 1;
+							x++;
+						}
+					};
+				},
+				'Right to left, top to bottom': function(o) {
+					var out = o, x = 0, y = 0;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y++;
+						if (y == out.height) {
+							y = 0;
+							x--;
+						}
+					};
+				},
+				'Right to left, bottom to top': function(o) {
+					var out = o, x = 0, y = 0;
+					return function(r, g, b, a) {
+						var i = 4 * y * out.width + 4 * x;
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+						y--;
+						if (y < 0) {
+							y = out.height - 1;
+							x--;
+						}
+					};
+				},
+			};
+			var mf = {
+				render_start: function(m) {
+					var input = {data: m.file, length: m.file.length};
+					var p = prod[m.prod](m.image);
+					for (var i = 0; i < m.options.skipbytes; i++)
+						nextbyte(input);
+					cons[m.cons](input, m.image, p, m.options)();
+					postMessage({type: 'render_done', image: m.image});
+				},
+			};
+			addEventListener('message', function(e) {
+				mf[e.data.type](e.data);
+			}, false);
+			postMessage({
+				type: 'worker_ready',
+				cons_names: object_keys(cons),
+				prod_names: object_keys(prod)
+			});
+		</script>
+		<script>
+			function $(s, p) {
+				return Array.prototype.slice.call(
+					(p || document).querySelectorAll(s));
+			}
+			function $$(s) {
+				return document.querySelector(s);
+			}
+			function $n(n) {
+				do n = n.nextSibling;
+				while (n.nodeType != 1);
+				return n;
+			}
+			function log() {
+				this.console && console.log &&
+					console.log.apply(console, arguments);
+			}
+			function radio_value(nodelist) {
+				for (var i = 0; i < nodelist.length; i++)
+					if (nodelist[i].checked)
+						return nodelist[i].value;
+			}
+			function invoke_render(e) {
+				if (!f.file.files[0]) {
+					log('no file selected');
+					e.preventDefault();
+					return;
+				}
+				p.value = 0;
+				c.width = f.width.value;
+				c.height = f.height.value;
+				c.style.width = (f.width.value * f.zoom.value) + 'px';
+				c.style.height = (f.height.value * f.zoom.value) + 'px';
+				log('render start requested; loading file');
+				$('input').forEach(function(i) {
+					i.disabled = true;
+				});
+				var reader = new FileReader;
+				reader.addEventListener('load', function(e) {
+					log('file loaded; rendering started');
+					w.postMessage({
+						type: 'render_start',
+						cons: radio_value(f.cons),
+						prod: radio_value(f.prod),
+						image: t.getImageData(0, 0, c.width, c.height),
+						file: e.target.result,
+						options: {
+							alpha: f.alpha.value,
+							skipbytes: f.skipbytes.value,
+						},
+					});
+				}, false);
+				reader.readAsBinaryString(f.file.files[0]);
+				e.preventDefault();
+			}
+			var f = $$('form').elements;
+			var c = $$('canvas');
+			var p = $$('progress');
+			var t = c.getContext('2d');
+			var w = (function() {
+				var bb = new (
+					this.BlobBuilder ||
+					this.MozBlobBuilder ||
+					this.WebKitBlobBuilder
+				);
+				bb.append($$('#ws').textContent);
+				return new Worker((this.URL || this.webkitURL).
+					createObjectURL(bb.getBlob()));
+			})();
+			var mf = {
+				worker_progress: function(m) {
+					p.value = m.value;
+				},
+				worker_ready: function(m) {
+					function populate(namelist, fieldname, element) {
+						for (var i = 0; i < namelist.length; i++) {
+							var o = document.createElement('input');
+							var l = document.createElement('label');
+							var b = document.createElement('br');
+							o.type = 'radio';
+							o.name = fieldname;
+							o.id = fieldname + '_' + i;
+							o.value = namelist[i];
+							l.setAttribute('for', o.id);
+							l.textContent = ' ' + namelist[i];
+							if (i == 0)
+								o.checked = true;
+							element.appendChild(o);
+							element.appendChild(l);
+							element.appendChild(b);
+						}
+					}
+					function section_click(e) {
+						$('section:not(:first-child) div').forEach(
+							function(i) {
+								i.style.display = 'none';
+						});
+						$n(e.target).style.display = 'block';
+					}
+					section_click({target: $$('section:last-child h2')});
+					populate(m.cons_names, 'cons', $$('#cons_p div'));
+					populate(m.prod_names, 'prod', $$('#prod_p div'));
+					$('h2').forEach(function(i) {
+						i.addEventListener('click', section_click, false);
+					});
+					$('input').forEach(function(i) {
+						i.addEventListener('change', invoke_render, false);
+					});
+					$('input').forEach(function(i) {
+						i.disabled = false;
+					});
+				},
+				render_done: function(m) {
+					log('rendering complete; painting started');
+					t.putImageData(m.image, 0, 0);
+					p.value = 1;
+					log('painting complete');
+					$('input').forEach(function(i) {
+						i.disabled = false;
+					});
+				},
+			};
+			w.addEventListener('message', function(e) {
+				log('received message:', e.data.type);
+				mf[e.data.type](e.data);
+			}, false);
+		</script>
+	</body>
+</html>
