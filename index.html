@@ -41,6 +41,10 @@
 			td:nth-child(2) {
 				text-align: right;
 			}
+			td[colspan="2"] {
+				padding-left: 2em;
+				font-style: italic;
+			}
 			h1 {
 				font-size: 2em;
 				margin-top: 0em;
@@ -73,49 +77,6 @@
 					</div>
 				</section>
 				<section>
-					<h2>File</h2>
-					<div>
-						<input type="file" name="file"><br>
-					</div>
-				</section>
-				<section>
-					<h2>Settings</h2>
-					<div>
-						<table>
-							<tr>
-							<td>Image width:
-							<td><input type="number" min="1" step="1"
-								name="width" value="640">
-							<tr>
-							<td>Image height:
-							<td><input type="number" min="1" step="1"
-								name="height" value="480">
-							<tr>
-							<td>Skip input bytes:
-							<td><input type="number" min="0" step="1"
-								name="skipbytes" value="0">
-							<tr>
-							<td>Default alpha (0-255):
-							<td><input type="range" min="0" max="255" step="1"
-								name="alpha" value="255">
-								<input type="button" value="✓">
-							<tr>
-							<td>Zoom:
-							<td><input type="range" name="zoom"
-								min="0.5" max="8" value="1" step="0.5">
-								<input type="button" value="✓">
-						</table>
-					</div>
-				</section>
-				<section id="cons_p">
-					<h2>Consumer</h2>
-					<div></div>
-				</section>
-				<section id="prod_p">
-					<h2>Producer</h2>
-					<div></div>
-				</section>
-				<section>
 					<h2>About</h2>
 					<div>
 						<p>
@@ -143,6 +104,74 @@ producer, which draws the pixel onto the canvas in some specified arrangement.
 This program is released under the terms of the MIT license. Please send any
 questions, suggestions or comments to <a href="mailto:delan@azabani.com">
 delan@azabani.com</a>.
+					</div>
+				</section>
+				<section>
+					<h2>Step 1: Choose a file</h2>
+					<div>
+						<p>Select a file on your computer to render. No data is
+							uploaded to any external server; everything is done
+							client-side.
+						<p><input type="file" name="file">
+					</div>
+				</section>
+				<section>
+					<h2>Step 2: Configure canvas</h2>
+					<div>
+						<table>
+							<tr>
+							<td>Image width:
+							<td><input type="number" min="1" step="1"
+								name="width" value="640">
+							<tr>
+							<td>Image height:
+							<td><input type="number" min="1" step="1"
+								name="height" value="480">
+							<tr>
+							<td>Skip input bytes:
+							<td><input type="number" min="0" step="1"
+								name="skipbytes" value="0">
+							<tr>
+							<td colspan="2">Start at a certain offset in the
+								input file.
+							<tr>
+							<td>Default alpha:
+							<td><input type="range" min="0" max="255" step="1"
+								name="alpha" value="255">
+								<input type="button" value="✓">
+							<tr>
+							<td colspan="2">Configure a global opacity value for
+								consumers that do not care about opacity.
+							<tr>
+							<td>Zoom:
+							<td><input type="range" name="zoom"
+								min="0.5" max="8" value="1" step="0.5">
+								<input type="button" value="✓">
+							<tr>
+							<td colspan="2">From 50% to 800% inclusive, in steps
+								of 50%.
+						</table>
+					</div>
+				</section>
+				<section id="cons_p">
+					<h2>Step 3: Choose a consumer</h2>
+					<div>
+						<p>The consumer you use defines how the bytes from the
+							input file are interpreted. For example, RGBX reads
+							four bytes at a time, uses the first three to create
+							an RGB pixel, and discards the fourth. 'Byte class'
+							maps each byte to a pixel of one of four colours.
+							</p>
+					</div>
+				</section>
+				<section id="prod_p">
+					<h2>Step 4: Choose a producer</h2>
+					<div>
+						<p>The producer arranges the incoming pixels from the
+							consumer in a certain layout. The Hilbert curve
+							producer is interesting in that it maximises
+							locality; pixels that are close to each other in the
+							file are close to each other on the image.</p>
 					</div>
 				</section>
 			</fieldset>
@@ -648,7 +677,7 @@ delan@azabani.com</a>.
 						});
 						$n(e.target).style.display = 'block';
 					}
-					section_click({target: $$('section:last-child h2')});
+					section_click({target: $$('section:nth-child(2) h2')});
 					populate(m.cons_names, 'cons', $$('#cons_p div'));
 					populate(m.prod_names, 'prod', $$('#prod_p div'));
 					$('h2').forEach(function(i) {
