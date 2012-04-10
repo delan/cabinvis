@@ -101,6 +101,11 @@ objects with their own internal state. When rendering the image, the chosen
 consumer reads bytes in, and when a pixel is ready, sends it to the chosen
 producer, which draws the pixel onto the canvas in some specified arrangement.
 						<p>
+Here are some examples:
+	<a href="http://i.imgur.com/0lFNt.png">one</a>,
+	<a href="http://i.imgur.com/fSWGv.png">two</a>,
+	<a href="http://i.imgur.com/kzEoE.png">three</a>.
+						<p>
 This program is released under the terms of the MIT license. Please send any
 questions, suggestions or comments to <a href="mailto:delan@azabani.com">
 delan@azabani.com</a>.
@@ -122,11 +127,11 @@ delan@azabani.com</a>.
 							<tr>
 							<td>Image width:
 							<td><input type="number" min="1" step="1"
-								name="width" value="640">
+								name="width" value="512">
 							<tr>
 							<td>Image height:
 							<td><input type="number" min="1" step="1"
-								name="height" value="480">
+								name="height" value="512">
 							<tr>
 							<td>Skip input bytes:
 							<td><input type="number" min="0" step="1"
@@ -175,7 +180,7 @@ delan@azabani.com</a>.
 					</div>
 				</section>
 			</fieldset>
-			<div id="container"><canvas></canvas></div>
+			<div id="container"><canvas width="512" height="512"></canvas></div>
 		</form>
 		<script id="ws" type="text/x-javascript-worker">
 			function nextbyte(o) {
@@ -195,6 +200,32 @@ delan@azabani.com</a>.
 				return a;
 			}
 			var cons = {
+				'Byte class (zeroes/ones/ASCII/other)':
+					function(i, o, p, opt) {
+					var x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							if (x == 0)
+								p(0, 0, 0, opt.alpha);
+							else if (x == 255)
+								p(255, 255, 255, opt.alpha);
+							else if (x > 31 && x < 127)
+								p(55, 126, 184, opt.alpha);
+							else
+								p(228, 26, 28, opt.alpha);
+						}
+					};
+				},
+				'Byte value as gray level': function(i, o, p, opt) {
+					var x;
+					return function() {
+						while (i.data) {
+							x = nextbyte(i);
+							p(x, x, x, opt.alpha);
+						}
+					};
+				},
 				'RGB': function(i, o, p, opt) {
 					var s = 0, r, g, x;
 					return function() {
@@ -249,34 +280,53 @@ delan@azabani.com</a>.
 						}
 					};
 				},
-				'Byte class (zeroes/ones/ASCII/other)':
-					function(i, o, p, opt) {
-					var x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							if (x == 0)
-								p(0, 0, 0, opt.alpha);
-							else if (x == 255)
-								p(255, 255, 255, opt.alpha);
-							else if (x > 31 && x < 127)
-								p(55, 126, 184, opt.alpha);
-							else
-								p(228, 26, 28, opt.alpha);
-						}
-					};
-				},
-				'Byte value as gray level': function(i, o, p, opt) {
-					var x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							p(x, x, x, opt.alpha);
-						}
-					};
-				},
 			};
 			var prod = {
+				'Hilbert curve': function(o) {
+					/* hilbert and rot functions from Wikipedia/Hilbert_curve;
+						direct JavaScript ports of d2xy and rot respectively */
+					function hilbert(n, d) {
+						var rx, ry, s, t = d, x = 0, y = 0;
+						for (s = 1; s < n; s *= 2) {
+							rx = 1 & (t / 2);
+							ry = 1 & (t ^ rx);
+							var rotresult = rot(s, x, y, rx, ry);
+							x = rotresult[0];
+							y = rotresult[1];
+							x += s * rx;
+							y += s * ry;
+							t /= 4;
+						}
+						return [x, y];
+					}
+					function rot(n, x, y, rx, ry) {
+						var t;
+						if (ry == 0) {
+							if (rx == 1) {
+								x = n - 1 - x;
+								y = n - 1 - y;
+							}
+							t = x;
+							x = y;
+							y = t;
+						}
+						return [x, y];
+					}
+					var out = o, count = 0;
+					/* find the highest power of two that is less than or
+						equal to the smaller of the two dimensions */
+					var sidelength = Math.pow(2, Math.floor(
+						Math.log(Math.min(out.width, out.height)) /
+						Math.log(2)));
+					return function(r, g, b, a) {
+						var c = hilbert(sidelength, count++);
+						var i = 4 * c[1] * out.width + 4 * c[0];
+						out.data[i++] = r;
+						out.data[i++] = g;
+						out.data[i++] = b;
+						out.data[i++] = a;
+					};
+				},
 				'Top to bottom, left to right': function(o) {
 					var out = o, i = 0;
 					return function(r, g, b, a) {
@@ -511,51 +561,6 @@ delan@azabani.com</a>.
 							y -= d;
 							d *= -1;
 						}
-					};
-				},
-				'Hilbert curve': function(o) {
-					/* hilbert and rot functions from Wikipedia/Hilbert_curve;
-						direct JavaScript ports of d2xy and rot respectively */
-					function hilbert(n, d) {
-						var rx, ry, s, t = d, x = 0, y = 0;
-						for (s = 1; s < n; s *= 2) {
-							rx = 1 & (t / 2);
-							ry = 1 & (t ^ rx);
-							var rotresult = rot(s, x, y, rx, ry);
-							x = rotresult[0];
-							y = rotresult[1];
-							x += s * rx;
-							y += s * ry;
-							t /= 4;
-						}
-						return [x, y];
-					}
-					function rot(n, x, y, rx, ry) {
-						var t;
-						if (ry == 0) {
-							if (rx == 1) {
-								x = n - 1 - x;
-								y = n - 1 - y;
-							}
-							t = x;
-							x = y;
-							y = t;
-						}
-						return [x, y];
-					}
-					var out = o, count = 0;
-					/* find the highest power of two that is less than or
-						equal to the smaller of the two dimensions */
-					var sidelength = Math.pow(2, Math.floor(
-						Math.log(Math.min(out.width, out.height)) /
-						Math.log(2)));
-					return function(r, g, b, a) {
-						var c = hilbert(sidelength, count++);
-						var i = 4 * c[1] * out.width + 4 * c[0];
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
 					};
 				},
 			};
