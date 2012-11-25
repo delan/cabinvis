@@ -73,7 +73,8 @@
 				<section>
 					<h1>Cabinvis</h1>
 					<div>
-						<progress max="1" value="0"></progress>
+						<progress max="1" value="0">
+						</progress>
 					</div>
 				</section>
 				<section>
@@ -114,617 +115,633 @@ delan@azabani.com</a>.
 				<section>
 					<h2>Step 1: Choose a file</h2>
 					<div>
-						<p>Select a file on your computer to render. No data is
-							uploaded to any external server; everything is done
-							client-side.
-						<p><input type="file" name="file">
+					<p>Select a file on your computer to
+					render. No data is uploaded to any
+					external server; everything is done
+					client-side.
+					<p><input type="file" name="file">
 					</div>
 				</section>
 				<section>
 					<h2>Step 2: Configure canvas</h2>
 					<div>
-						<table>
-							<tr>
-							<td>Image width:
-							<td><input type="number" min="1" step="1"
-								name="width" value="512">
-							<tr>
-							<td>Image height:
-							<td><input type="number" min="1" step="1"
-								name="height" value="512">
-							<tr>
-							<td>Skip input bytes:
-							<td><input type="number" min="0" step="1"
-								name="skipbytes" value="0">
-							<tr>
-							<td colspan="2">Start at a certain offset in the
-								input file.
-							<tr>
-							<td>Default alpha:
-							<td><input type="range" min="0" max="255" step="1"
-								name="alpha" value="255">
-								<input type="button" value="✓">
-							<tr>
-							<td colspan="2">Configure a global opacity value for
-								consumers that do not care about opacity.
-							<tr>
-							<td>Zoom:
-							<td><input type="range" name="zoom"
-								min="-3" max="3" value="0" step="1">
-								<input type="button" value="✓">
-							<tr>
-							<td colspan="2">From 12.5% to 800% inclusive,
-								doubling in each step. If you see a text box
-								instead of a slider above, enter a power of two,
-								e.g. -3 for 12.5%.
-						</table>
+					<table>
+					<tr>
+					<td>Image width:
+					<td><input type="number" min="1"
+						step="1" name="width"
+						value="512">
+					<tr>
+					<td>Image height:
+					<td><input type="number" min="1"
+						step="1" name="height"
+						value="512">
+					<tr>
+					<td>Skip input bytes:
+					<td><input type="number" min="0"
+						step="1" name="skipbytes"
+						value="0">
+					<tr>
+					<td colspan="2">Start at a certain
+						offset in the input file.
+					<tr>
+					<td>Default alpha:
+					<td><input type="range" min="0"
+						max="255" step="1" name="alpha"
+						value="255">
+					<input type="button" value="✓">
+					<tr>
+					<td colspan="2">Configure a global
+						opacity value for consumers that
+						do not care about opacity.
+					<tr>
+					<td>Zoom:
+					<td><input type="range" name="zoom"
+						min="-3" max="3" value="0"
+						step="1">
+					<input type="button" value="✓">
+					<tr>
+					<td colspan="2">From 12.5% to 800%
+						inclusive, doubling in each
+						step. If you see a text box
+						instead of a slider above, enter
+						a power of two, e.g. -3 for
+						12.5%.
+					</table>
 					</div>
 				</section>
 				<section id="cons_p">
 					<h2>Step 3: Choose a consumer</h2>
 					<div>
-						<p>The consumer you use defines how the bytes from the
-							input file are interpreted. For example, RGBX reads
-							four bytes at a time, uses the first three to create
-							an RGB pixel, and discards the fourth. 'Byte class'
-							maps each byte to a pixel of one of four colours.
-							</p>
+					<p>The consumer you use defines how the
+					bytes from the input file are
+					interpreted. For example, RGBX reads
+					four bytes at a time, uses the first
+					three to create an RGB pixel, and
+					discards the fourth. 'Byte class' maps
+					each byte to a pixel of one of four
+					colours.
+					</p>
 					</div>
 				</section>
 				<section id="prod_p">
 					<h2>Step 4: Choose a producer</h2>
 					<div>
-						<p>The producer arranges the incoming pixels from the
-							consumer in a certain layout. The Hilbert curve
-							producer is interesting in that it maximises
-							locality; pixels that are close to each other in the
-							file are close to each other on the image.</p>
+					<p>The producer arranges the incoming
+					pixels from the consumer in a certain
+					layout. The Hilbert curve producer is
+					interesting in that it maximises
+					locality; pixels that are close to each
+					other in the file are close to each
+					other on the image.
 					</div>
 				</section>
 			</fieldset>
-			<div id="container"><canvas width="512" height="512"></canvas></div>
+			<div id="container">
+				<canvas width="512" height="512"></canvas>
+			</div>
 		</form>
 		<script id="ws" type="text/x-javascript-worker">
-			function nextbyte(o) {
-				if (!(o.data.length % 65536))
-					postMessage({
-						type: 'worker_progress',
-						value: (o.length - o.data.length) / o.length
-					});
-				var b = o.data.charCodeAt(0);
-				o.data = o.data.substring(1);
-				return b;
+function nextbyte(o) {
+	if (!(o.data.length % 65536))
+		postMessage({
+			type: 'worker_progress',
+			value: (o.length - o.data.length) / o.length
+		});
+	var b = o.data.charCodeAt(0);
+	o.data = o.data.substring(1);
+	return b;
+}
+function object_keys(o) {
+	var a = [];
+	for (var i in o)
+		a.push(i);
+	return a;
+}
+var cons = {
+	'Byte class (zeroes/ones/ASCII/other)':
+		function(i, o, p, opt) {
+		var x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				if (x == 0)
+					p(0, 0, 0, opt.alpha);
+				else if (x == 255)
+					p(255, 255, 255, opt.alpha);
+				else if (x > 31 && x < 127)
+					p(55, 126, 184, opt.alpha);
+				else
+					p(228, 26, 28, opt.alpha);
 			}
-			function object_keys(o) {
-				var a = [];
-				for (var i in o)
-					a.push(i);
-				return a;
+		};
+	},
+	'Byte value as gray level': function(i, o, p, opt) {
+		var x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				p(x, x, x, opt.alpha);
 			}
-			var cons = {
-				'Byte class (zeroes/ones/ASCII/other)':
-					function(i, o, p, opt) {
-					var x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							if (x == 0)
-								p(0, 0, 0, opt.alpha);
-							else if (x == 255)
-								p(255, 255, 255, opt.alpha);
-							else if (x > 31 && x < 127)
-								p(55, 126, 184, opt.alpha);
-							else
-								p(228, 26, 28, opt.alpha);
-						}
-					};
-				},
-				'Byte value as gray level': function(i, o, p, opt) {
-					var x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							p(x, x, x, opt.alpha);
-						}
-					};
-				},
-				'RGB': function(i, o, p, opt) {
-					var s = 0, r, g, x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							switch (s) {
-							case 0: r = x; s++; break;
-							case 1: g = x; s++; break;
-							case 2: p(r, g, x, opt.alpha); s = 0;
-							}
-						}
-					};
-				},
-				'BGR': function(i, o, p, opt) {
-					var s = 0, b, g, x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							switch (s) {
-							case 0: b = x; s++; break;
-							case 1: g = x; s++; break;
-							case 2: p(x, g, b, opt.alpha); s = 0;
-							}
-						}
-					};
-				},
-				'RGBA': function(i, o, p, opt) {
-					var s = 0, r, g, b, x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							switch (s) {
-							case 0: r = x; s++; break;
-							case 1: g = x; s++; break;
-							case 2: b = x; s++; break;
-							case 3: p(r, g, b, x); s = 0;
-							}
-						}
-					};
-				},
-				'RGBX': function(i, o, p, opt) {
-					var s = 0, r, g, b, x;
-					return function() {
-						while (i.data) {
-							x = nextbyte(i);
-							switch (s) {
-							case 0: r = x; s++; break;
-							case 1: g = x; s++; break;
-							case 2: b = x; s++; break;
-							case 3: p(r, g, b, opt.alpha); s = 0;
-							}
-						}
-					};
-				},
-			};
-			var prod = {
-				'Hilbert curve': function(o) {
-					/* hilbert and rot functions from Wikipedia/Hilbert_curve;
-						direct JavaScript ports of d2xy and rot respectively */
-					function hilbert(n, d) {
-						var rx, ry, s, t = d, x = 0, y = 0;
-						for (s = 1; s < n; s *= 2) {
-							rx = 1 & (t / 2);
-							ry = 1 & (t ^ rx);
-							var rotresult = rot(s, x, y, rx, ry);
-							x = rotresult[0];
-							y = rotresult[1];
-							x += s * rx;
-							y += s * ry;
-							t /= 4;
-						}
-						return [x, y];
-					}
-					function rot(n, x, y, rx, ry) {
-						var t;
-						if (ry == 0) {
-							if (rx == 1) {
-								x = n - 1 - x;
-								y = n - 1 - y;
-							}
-							t = x;
-							x = y;
-							y = t;
-						}
-						return [x, y];
-					}
-					var out = o, count = 0;
-					/* find the highest power of two that is less than or
-						equal to the smaller of the two dimensions */
-					var sidelength = Math.pow(2, Math.floor(
-						Math.log(Math.min(out.width, out.height)) /
-						Math.log(2)));
-					return function(r, g, b, a) {
-						var c = hilbert(sidelength, count++);
-						var i = 4 * c[1] * out.width + 4 * c[0];
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-					};
-				},
-				'Top to bottom, left to right': function(o) {
-					var out = o, i = 0;
-					return function(r, g, b, a) {
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-					};
-				},
-				'Top to bottom, right to left': function(o) {
-					var out = o, x = o.width - 1, y = 0;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x--;
-						if (x < 0) {
-							x = out.width - 1;
-							y++;
-						}
-					};
-				},
-				'Bottom to top, left to right': function(o) {
-					var out = o, x = 0, y = o.height - 1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x++;
-						if (x == out.width) {
-							x = 0;
-							y--;
-						}
-					};
-				},
-				'Bottom to top, right to left': function(o) {
-					var out = o, i = o.width * o.height * 4 - 1;
-					return function(r, g, b, a) {
-						out.data[i--] = a;
-						out.data[i--] = b;
-						out.data[i--] = g;
-						out.data[i--] = r;
-					};
-				},
-				'Left to right, top to bottom': function(o) {
-					var out = o, x = 0, y = 0;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y++;
-						if (y == out.height) {
-							y = 0;
-							x++;
-						}
-					};
-				},
-				'Left to right, bottom to top': function(o) {
-					var out = o, x = 0, y = 0;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y--;
-						if (y < 0) {
-							y = out.height - 1;
-							x++;
-						}
-					};
-				},
-				'Right to left, top to bottom': function(o) {
-					var out = o, x = 0, y = 0;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y++;
-						if (y == out.height) {
-							y = 0;
-							x--;
-						}
-					};
-				},
-				'Right to left, bottom to top': function(o) {
-					var out = o, x = 0, y = 0;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y--;
-						if (y < 0) {
-							y = out.height - 1;
-							x--;
-						}
-					};
-				},
-				'Horizontal zigzag, starting from top left': function(o) {
-					var out = o, x = 0, y = 0, d = 1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x += d;
-						if (x < 0 || x == out.width) {
-							y++;
-							x -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Horizontal zigzag, starting from top right': function(o) {
-					var out = o, x = out.width - 1, y = 0, d = -1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x += d;
-						if (x < 0 || x == out.width) {
-							y++;
-							x -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Horizontal zigzag, starting from bottom left': function(o) {
-					var out = o, x = 0, y = out.height - 1, d = 1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x += d;
-						if (x < 0 || x == out.width) {
-							y--;
-							x -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Horizontal zigzag, starting from bottom right': function(o) {
-					var out = o, x = out.width - 1, y = out.height - 1, d = -1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						x += d;
-						if (x < 0 || x == out.width) {
-							y--;
-							x -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Vertical zigzag, starting from top left': function(o) {
-					var out = o, x = 0, y = 0, d = 1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y += d;
-						if (y < 0 || y == out.height) {
-							x++;
-							y -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Vertical zigzag, starting from top right': function(o) {
-					var out = o, x = out.width - 1, y = 0, d = 1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y += d;
-						if (y < 0 || y == out.height) {
-							x--;
-							y -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Vertical zigzag, starting from bottom left': function(o) {
-					var out = o, x = 0, y = out.height - 1, d = -1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y += d;
-						if (y < 0 || y == out.height) {
-							x++;
-							y -= d;
-							d *= -1;
-						}
-					};
-				},
-				'Vertical zigzag, starting from bottom right': function(o) {
-					var out = o, x = out.width - 1, y = out.height - 1, d = -1;
-					return function(r, g, b, a) {
-						var i = 4 * y * out.width + 4 * x;
-						out.data[i++] = r;
-						out.data[i++] = g;
-						out.data[i++] = b;
-						out.data[i++] = a;
-						y += d;
-						if (y < 0 || y == out.height) {
-							x--;
-							y -= d;
-							d *= -1;
-						}
-					};
-				},
-			};
-			var mf = {
-				render_start: function(m) {
-					var input = {data: m.file, length: m.file.length};
-					var p = prod[m.prod](m.image);
-					for (var i = 0; i < m.options.skipbytes; i++)
-						nextbyte(input);
-					cons[m.cons](input, m.image, p, m.options)();
-					postMessage({type: 'render_done', image: m.image});
-				},
-			};
-			addEventListener('message', function(e) {
-				mf[e.data.type](e.data);
-			}, false);
-			postMessage({
-				type: 'worker_ready',
-				cons_names: object_keys(cons),
-				prod_names: object_keys(prod)
-			});
+		};
+	},
+	'RGB': function(i, o, p, opt) {
+		var s = 0, r, g, x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				switch (s) {
+				case 0: r = x; s++; break;
+				case 1: g = x; s++; break;
+				case 2: p(r, g, x, opt.alpha); s = 0;
+				}
+			}
+		};
+	},
+	'BGR': function(i, o, p, opt) {
+		var s = 0, b, g, x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				switch (s) {
+				case 0: b = x; s++; break;
+				case 1: g = x; s++; break;
+				case 2: p(x, g, b, opt.alpha); s = 0;
+				}
+			}
+		};
+	},
+	'RGBA': function(i, o, p, opt) {
+		var s = 0, r, g, b, x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				switch (s) {
+				case 0: r = x; s++; break;
+				case 1: g = x; s++; break;
+				case 2: b = x; s++; break;
+				case 3: p(r, g, b, x); s = 0;
+				}
+			}
+		};
+	},
+	'RGBX': function(i, o, p, opt) {
+		var s = 0, r, g, b, x;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				switch (s) {
+				case 0: r = x; s++; break;
+				case 1: g = x; s++; break;
+				case 2: b = x; s++; break;
+				case 3: p(r, g, b, opt.alpha); s = 0;
+				}
+			}
+		};
+	},
+};
+var prod = {
+	'Hilbert curve': function(o) {
+		/* hilbert and rot functions from Wikipedia/Hilbert_curve;
+			direct JavaScript ports of d2xy and rot respectively */
+		function hilbert(n, d) {
+			var rx, ry, s, t = d, x = 0, y = 0;
+			for (s = 1; s < n; s *= 2) {
+				rx = 1 & (t / 2);
+				ry = 1 & (t ^ rx);
+				var rotresult = rot(s, x, y, rx, ry);
+				x = rotresult[0];
+				y = rotresult[1];
+				x += s * rx;
+				y += s * ry;
+				t /= 4;
+			}
+			return [x, y];
+		}
+		function rot(n, x, y, rx, ry) {
+			var t;
+			if (ry == 0) {
+				if (rx == 1) {
+					x = n - 1 - x;
+					y = n - 1 - y;
+				}
+				t = x;
+				x = y;
+				y = t;
+			}
+			return [x, y];
+		}
+		var out = o, count = 0;
+		/* find the highest power of two that is less than or
+			equal to the smaller of the two dimensions */
+		var sidelength = Math.pow(2, Math.floor(
+			Math.log(Math.min(out.width, out.height)) /
+			Math.log(2)));
+		return function(r, g, b, a) {
+			var c = hilbert(sidelength, count++);
+			var i = 4 * c[1] * out.width + 4 * c[0];
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+		};
+	},
+	'Top to bottom, left to right': function(o) {
+		var out = o, i = 0;
+		return function(r, g, b, a) {
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+		};
+	},
+	'Top to bottom, right to left': function(o) {
+		var out = o, x = o.width - 1, y = 0;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x--;
+			if (x < 0) {
+				x = out.width - 1;
+				y++;
+			}
+		};
+	},
+	'Bottom to top, left to right': function(o) {
+		var out = o, x = 0, y = o.height - 1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x++;
+			if (x == out.width) {
+				x = 0;
+				y--;
+			}
+		};
+	},
+	'Bottom to top, right to left': function(o) {
+		var out = o, i = o.width * o.height * 4 - 1;
+		return function(r, g, b, a) {
+			out.data[i--] = a;
+			out.data[i--] = b;
+			out.data[i--] = g;
+			out.data[i--] = r;
+		};
+	},
+	'Left to right, top to bottom': function(o) {
+		var out = o, x = 0, y = 0;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y++;
+			if (y == out.height) {
+				y = 0;
+				x++;
+			}
+		};
+	},
+	'Left to right, bottom to top': function(o) {
+		var out = o, x = 0, y = 0;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y--;
+			if (y < 0) {
+				y = out.height - 1;
+				x++;
+			}
+		};
+	},
+	'Right to left, top to bottom': function(o) {
+		var out = o, x = 0, y = 0;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y++;
+			if (y == out.height) {
+				y = 0;
+				x--;
+			}
+		};
+	},
+	'Right to left, bottom to top': function(o) {
+		var out = o, x = 0, y = 0;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y--;
+			if (y < 0) {
+				y = out.height - 1;
+				x--;
+			}
+		};
+	},
+	'Horizontal zigzag, starting from top left': function(o) {
+		var out = o, x = 0, y = 0, d = 1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x += d;
+			if (x < 0 || x == out.width) {
+				y++;
+				x -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Horizontal zigzag, starting from top right': function(o) {
+		var out = o, x = out.width - 1, y = 0, d = -1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x += d;
+			if (x < 0 || x == out.width) {
+				y++;
+				x -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Horizontal zigzag, starting from bottom left': function(o) {
+		var out = o, x = 0, y = out.height - 1, d = 1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x += d;
+			if (x < 0 || x == out.width) {
+				y--;
+				x -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Horizontal zigzag, starting from bottom right': function(o) {
+		var out = o, x = out.width - 1, y = out.height - 1, d = -1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			x += d;
+			if (x < 0 || x == out.width) {
+				y--;
+				x -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Vertical zigzag, starting from top left': function(o) {
+		var out = o, x = 0, y = 0, d = 1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y += d;
+			if (y < 0 || y == out.height) {
+				x++;
+				y -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Vertical zigzag, starting from top right': function(o) {
+		var out = o, x = out.width - 1, y = 0, d = 1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y += d;
+			if (y < 0 || y == out.height) {
+				x--;
+				y -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Vertical zigzag, starting from bottom left': function(o) {
+		var out = o, x = 0, y = out.height - 1, d = -1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y += d;
+			if (y < 0 || y == out.height) {
+				x++;
+				y -= d;
+				d *= -1;
+			}
+		};
+	},
+	'Vertical zigzag, starting from bottom right': function(o) {
+		var out = o, x = out.width - 1, y = out.height - 1, d = -1;
+		return function(r, g, b, a) {
+			var i = 4 * y * out.width + 4 * x;
+			out.data[i++] = r;
+			out.data[i++] = g;
+			out.data[i++] = b;
+			out.data[i++] = a;
+			y += d;
+			if (y < 0 || y == out.height) {
+				x--;
+				y -= d;
+				d *= -1;
+			}
+		};
+	},
+};
+var mf = {
+	render_start: function(m) {
+		var input = {data: m.file, length: m.file.length};
+		var p = prod[m.prod](m.image);
+		for (var i = 0; i < m.options.skipbytes; i++)
+			nextbyte(input);
+		cons[m.cons](input, m.image, p, m.options)();
+		postMessage({type: 'render_done', image: m.image});
+	},
+};
+addEventListener('message', function(e) {
+	mf[e.data.type](e.data);
+}, false);
+postMessage({
+	type: 'worker_ready',
+	cons_names: object_keys(cons),
+	prod_names: object_keys(prod)
+});
 		</script>
 		<script>
-			function $(s, p) {
-				return Array.prototype.slice.call(
-					(p || document).querySelectorAll(s));
+function $(s, p) {
+	return Array.prototype.slice.call(
+		(p || document).querySelectorAll(s));
+}
+function $$(s) {
+	return document.querySelector(s);
+}
+function $n(n) {
+	do n = n.nextSibling;
+	while (n.nodeType != 1);
+	return n;
+}
+function log() {
+	this.console && console.log &&
+		console.log.apply(console, arguments);
+}
+function radio_value(nodelist) {
+	for (var i = 0; i < nodelist.length; i++)
+		if (nodelist[i].checked)
+			return nodelist[i].value;
+}
+function invoke_render(e) {
+	if (!f.file.files[0]) {
+		log('no file selected');
+		e.preventDefault();
+		return;
+	}
+	p.value = 0;
+	c.width = f.width.value;
+	c.height = f.height.value;
+	var z = Math.pow(2, f.zoom.value);
+	c.style.width = (f.width.value * z) + 'px';
+	c.style.height = (f.height.value * z) + 'px';
+	log('render start requested; loading file');
+	$('input').forEach(function(i) {
+		i.disabled = true;
+	});
+	var reader = new FileReader;
+	reader.addEventListener('load', function(e) {
+		log('file loaded; rendering started');
+		w.postMessage({
+			type: 'render_start',
+			cons: radio_value(f.cons),
+			prod: radio_value(f.prod),
+			image: t.getImageData(0, 0, c.width, c.height),
+			file: e.target.result,
+			options: {
+				alpha: f.alpha.value,
+				skipbytes: f.skipbytes.value,
+			},
+		});
+	}, false);
+	reader.readAsBinaryString(f.file.files[0]);
+	e.preventDefault();
+}
+var f = $$('form').elements;
+var c = $$('canvas');
+var p = $$('progress');
+var t = c.getContext('2d');
+var w = (function() {
+	var bb = new (
+		this.BlobBuilder ||
+		this.MozBlobBuilder ||
+		this.WebKitBlobBuilder
+	);
+	bb.append($$('#ws').textContent);
+	return new Worker((this.URL || this.webkitURL).
+		createObjectURL(bb.getBlob()));
+})();
+var mf = {
+	worker_progress: function(m) {
+		p.value = m.value;
+	},
+	worker_ready: function(m) {
+		function populate(namelist, fieldname, element) {
+			for (var i = 0; i < namelist.length; i++) {
+				var o = document.createElement('input');
+				var l = document.createElement('label');
+				var b = document.createElement('br');
+				o.type = 'radio';
+				o.name = fieldname;
+				o.id = fieldname + '_' + i;
+				o.value = namelist[i];
+				l.setAttribute('for', o.id);
+				l.textContent = ' ' + namelist[i];
+				if (i == 0)
+					o.checked = true;
+				element.appendChild(o);
+				element.appendChild(l);
+				element.appendChild(b);
 			}
-			function $$(s) {
-				return document.querySelector(s);
-			}
-			function $n(n) {
-				do n = n.nextSibling;
-				while (n.nodeType != 1);
-				return n;
-			}
-			function log() {
-				this.console && console.log &&
-					console.log.apply(console, arguments);
-			}
-			function radio_value(nodelist) {
-				for (var i = 0; i < nodelist.length; i++)
-					if (nodelist[i].checked)
-						return nodelist[i].value;
-			}
-			function invoke_render(e) {
-				if (!f.file.files[0]) {
-					log('no file selected');
-					e.preventDefault();
-					return;
-				}
-				p.value = 0;
-				c.width = f.width.value;
-				c.height = f.height.value;
-				var z = Math.pow(2, f.zoom.value);
-				c.style.width = (f.width.value * z) + 'px';
-				c.style.height = (f.height.value * z) + 'px';
-				log('render start requested; loading file');
-				$('input').forEach(function(i) {
-					i.disabled = true;
-				});
-				var reader = new FileReader;
-				reader.addEventListener('load', function(e) {
-					log('file loaded; rendering started');
-					w.postMessage({
-						type: 'render_start',
-						cons: radio_value(f.cons),
-						prod: radio_value(f.prod),
-						image: t.getImageData(0, 0, c.width, c.height),
-						file: e.target.result,
-						options: {
-							alpha: f.alpha.value,
-							skipbytes: f.skipbytes.value,
-						},
-					});
-				}, false);
-				reader.readAsBinaryString(f.file.files[0]);
-				e.preventDefault();
-			}
-			var f = $$('form').elements;
-			var c = $$('canvas');
-			var p = $$('progress');
-			var t = c.getContext('2d');
-			var w = (function() {
-				var bb = new (
-					this.BlobBuilder ||
-					this.MozBlobBuilder ||
-					this.WebKitBlobBuilder
-				);
-				bb.append($$('#ws').textContent);
-				return new Worker((this.URL || this.webkitURL).
-					createObjectURL(bb.getBlob()));
-			})();
-			var mf = {
-				worker_progress: function(m) {
-					p.value = m.value;
-				},
-				worker_ready: function(m) {
-					function populate(namelist, fieldname, element) {
-						for (var i = 0; i < namelist.length; i++) {
-							var o = document.createElement('input');
-							var l = document.createElement('label');
-							var b = document.createElement('br');
-							o.type = 'radio';
-							o.name = fieldname;
-							o.id = fieldname + '_' + i;
-							o.value = namelist[i];
-							l.setAttribute('for', o.id);
-							l.textContent = ' ' + namelist[i];
-							if (i == 0)
-								o.checked = true;
-							element.appendChild(o);
-							element.appendChild(l);
-							element.appendChild(b);
-						}
-					}
-					function section_click(e) {
-						$('section:not(:first-child) div').forEach(
-							function(i) {
-								i.style.display = 'none';
-						});
-						$n(e.target).style.display = 'block';
-					}
-					section_click({target: $$('section:nth-child(2) h2')});
-					populate(m.cons_names, 'cons', $$('#cons_p div'));
-					populate(m.prod_names, 'prod', $$('#prod_p div'));
-					$('h2').forEach(function(i) {
-						i.addEventListener('click', section_click, false);
-					});
-					$('input:not([type=range])').forEach(function(i) {
-						i.addEventListener('change', invoke_render, false);
-					});
-					$('input[type=range]').forEach(function(i) {
-						$n(i).addEventListener('click', invoke_render, false);
-					});
-				},
-				render_done: function(m) {
-					log('rendering complete; painting started');
-					t.putImageData(m.image, 0, 0);
-					p.value = 1;
-					log('painting complete');
-					$('input').forEach(function(i) {
-						i.disabled = false;
-					});
-				},
-			};
-			w.addEventListener('message', function(e) {
-				log('received message:', e.data.type);
-				mf[e.data.type](e.data);
-			}, false);
-			$$('#container').style.backgroundImage = 'url(' +
-				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAA' +
-				'Bb59j9AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAABnUlEQVR4nO3bsQ0DIRQF' +
-				'Qc5yR%2FTfAdSEWyCxZK9m4tOLVj858ay1zrgw57z5bOy9r76zZ%2B8be6%2' +
-				'Brr%2BBPCJoUQZMiaFIETYqgSRE0KYImRdCkPOecqz%2BFv%2F6HyJ69MVxo' +
-				'YgRNiqBJETQpgiZF0KQImhRBkyJoUt6VP0T27I3hQhMjaFIETYqgSRE0KYIm' +
-				'RdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40' +
-				'KYImRdCkCJoUQZMiaFIETYqgSRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0' +
-				'KYImRdCkeFNoL7XnQpMiaFIETYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqg' +
-				'SRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40KYImRdCkCJoUQZMiaFIETYqg' +
-				'SRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0KYImRdCkeFNoL7XnQpMiaFIE' +
-				'TYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIE' +
-				'TcoHt3taUX1tnMMAAAAASUVORK5CYII%3D)';
+		}
+		function section_click(e) {
+			$('section:not(:first-child) div').forEach(
+				function(i) {
+					i.style.display = 'none';
+			});
+			$n(e.target).style.display = 'block';
+		}
+		section_click({target: $$('section:nth-child(2) h2')});
+		populate(m.cons_names, 'cons', $$('#cons_p div'));
+		populate(m.prod_names, 'prod', $$('#prod_p div'));
+		$('h2').forEach(function(i) {
+			i.addEventListener('click', section_click, false);
+		});
+		$('input:not([type=range])').forEach(function(i) {
+			i.addEventListener('change', invoke_render, false);
+		});
+		$('input[type=range]').forEach(function(i) {
+			$n(i).addEventListener('click', invoke_render, false);
+		});
+	},
+	render_done: function(m) {
+		log('rendering complete; painting started');
+		t.putImageData(m.image, 0, 0);
+		p.value = 1;
+		log('painting complete');
+		$('input').forEach(function(i) {
+			i.disabled = false;
+		});
+	},
+};
+w.addEventListener('message', function(e) {
+	log('received message:', e.data.type);
+	mf[e.data.type](e.data);
+}, false);
+$$('#container').style.backgroundImage = 'url(' +
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAA' +
+	'Bb59j9AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAABnUlEQVR4nO3bsQ0DIRQF' +
+	'Qc5yR%2FTfAdSEWyCxZK9m4tOLVj858ay1zrgw57z5bOy9r76zZ%2B8be6%2' +
+	'Brr%2BBPCJoUQZMiaFIETYqgSRE0KYImRdCkPOecqz%2BFv%2F6HyJ69MVxo' +
+	'YgRNiqBJETQpgiZF0KQImhRBkyJoUt6VP0T27I3hQhMjaFIETYqgSRE0KYIm' +
+	'RdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40' +
+	'KYImRdCkCJoUQZMiaFIETYqgSRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0' +
+	'KYImRdCkeFNoL7XnQpMiaFIETYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqg' +
+	'SRE0KYImRdCkCJoUQZMiaFIETYo3hfZSey40KYImRdCkCJoUQZMiaFIETYqg' +
+	'SRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0KYImRdCkeFNoL7XnQpMiaFIE' +
+	'TYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIE' +
+	'TcoHt3taUX1tnMMAAAAASUVORK5CYII%3D)';
 		</script>
 	</body>
 </html>
