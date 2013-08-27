@@ -663,14 +663,9 @@ var c = $$('canvas');
 var p = $$('progress');
 var t = c.getContext('2d');
 var w = (function() {
-	var bb = new (
-		this.BlobBuilder ||
-		this.MozBlobBuilder ||
-		this.WebKitBlobBuilder
-	);
-	bb.append($$('#ws').textContent);
+	var blob = new Blob([$$('#ws').textContent]);
 	return new Worker((this.URL || this.webkitURL).
-		createObjectURL(bb.getBlob()));
+		createObjectURL(blob));
 })();
 var mf = {
 	worker_progress: function(m) {
