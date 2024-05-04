@@ -635,8 +635,10 @@ function render() {
 		return;
 	}
 	p.value = 0;
+	var image = t.getImageData(0, 0, c.width, c.height);
 	c.width = f.width.value;
 	c.height = f.height.value;
+	t.putImageData(image, 0, 0);
 	var z = Math.pow(2, f.zoom.value);
 	c.style.width = (f.width.value * z) + 'px';
 	c.style.height = (f.height.value * z) + 'px';
