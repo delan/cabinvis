@@ -598,10 +598,16 @@ function radio_value(nodelist) {
 		if (nodelist[i].checked)
 			return nodelist[i].value;
 }
-function invoke_render(e) {
-	if (!f.file.files[0]) {
+function on_change(e) {
+	e.preventDefault();
+	if (f.file.files[0]) {
+		render();
+	} else {
 		log('no file selected');
-		e.preventDefault();
+	}
+}
+function render() {
+	if (!f.file.files[0]) {
 		return;
 	}
 	p.value = 0;
@@ -630,7 +636,6 @@ function invoke_render(e) {
 		});
 	}, false);
 	reader.readAsBinaryString(f.file.files[0]);
-	e.preventDefault();
 }
 var f = $$('form').elements;
 var c = $$('canvas');
@@ -666,11 +671,12 @@ var mf = {
 		}
 		populate(m.cons_names, 'cons', $$('#cons_p'));
 		populate(m.prod_names, 'prod', $$('#prod_p'));
+		render();
 		$('input:not([type=range])').forEach(function(i) {
-			i.addEventListener('change', invoke_render, false);
+			i.addEventListener('change', on_change, false);
 		});
 		$('input[type=range]').forEach(function(i) {
-			$n(i).addEventListener('click', invoke_render, false);
+			$n(i).addEventListener('click', on_change, false);
 		});
 	},
 	render_done: function(m) {
