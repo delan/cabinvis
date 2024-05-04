@@ -632,7 +632,7 @@ function on_change(e) {
 	f.height.value = Math.max(f.height.min, Math.min(f.height.max, f.height.value));
 	var selectedFile = getSelectedFile();
 	var settings = getSettings();
-	if (selectedFile && (selectedFile != lastFile || JSON.stringify(settings) != lastSettings)) {
+	if (selectedFile && (selectedFile != lastFile || JSON.stringify(settings) != JSON.stringify(lastSettings))) {
 		render(selectedFile, settings);
 	}
 }
@@ -657,19 +657,19 @@ function render(selectedFile, settings) {
 	}
 	context = canvases.current.getContext('2d');
 	if (settings.prod == 'Hilbert curve') {
-		if (settings.width < canvases.current.width) {
+		if (lastSettings && settings.width < lastSettings.width) {
 			// width was decreased
 			settings.width = 2 ** Math.floor(Math.log2(settings.width));
 			settings.height = settings.width;
-		} else if (settings.width > canvases.current.width) {
+		} else if (lastSettings && settings.width > lastSettings.width) {
 			// width was increased
 			settings.width = 2 ** Math.ceil(Math.log2(settings.width));
 			settings.height = settings.width;
-		} else if (settings.height < canvases.current.height) {
+		} else if (lastSettings && settings.height < lastSettings.height) {
 			// height was decreased
 			settings.height = 2 ** Math.floor(Math.log2(settings.height));
 			settings.width = settings.height;
-		} else if (settings.height > canvases.current.height) {
+		} else if (lastSettings && settings.height > lastSettings.height) {
 			// height was increased
 			settings.height = 2 ** Math.ceil(Math.log2(settings.height));
 			settings.width = settings.height;
@@ -685,7 +685,7 @@ function render(selectedFile, settings) {
 		f.height.value = settings.height;
 	}
 	lastFile = selectedFile;
-	lastSettings = JSON.stringify(settings);
+	lastSettings = settings;
 
 	p.value = 0;
 	canvases.current.width = settings.width;
