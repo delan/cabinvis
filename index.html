@@ -237,6 +237,23 @@ var cons = {
 			}
 		};
 	},
+	'Bit value as monochrome': function(i, o, p, opt) {
+		var x;
+		var bit;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				bit = x >> 0 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 1 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 2 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 3 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 4 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 5 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 6 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+				bit = x >> 7 & 1; p(bit ? 255 : 0, bit ? 255 : 0, bit ? 255 : 0, opt.alpha);
+			}
+		};
+	},
 	'Byte value as gray level': function(i, o, p, opt) {
 		var x;
 		return function() {
