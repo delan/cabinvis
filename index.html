@@ -586,6 +586,10 @@ var prod = {
 };
 var mf = {
 	render_start: function(m) {
+		// clear canvas
+		for (var i = 0; i < m.image.height * m.image.width * 4; i++)
+			m.image.data[i] = 0;
+
 		var input = {data: m.file, length: m.file.length};
 		var p = prod[m.prod](m.image);
 		for (var i = 0; i < m.options.skipbytes; i++)
