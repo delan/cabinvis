@@ -626,6 +626,8 @@ function radio_value(nodelist) {
 }
 function on_change(e) {
 	e.preventDefault();
+	f.width.value = Math.max(f.width.min, Math.min(f.width.max, f.width.value));
+	f.height.value = Math.max(f.height.min, Math.min(f.height.max, f.height.value));
 	var selectedFile = getSelectedFile();
 	var settings = getSettings();
 	if (selectedFile && (selectedFile != lastFile || JSON.stringify(settings) != lastSettings)) {
@@ -674,8 +676,10 @@ function render(selectedFile, settings) {
 			settings.width = Math.min(width, height);
 			settings.height = Math.min(width, height);
 		}
-		f.width.value = Math.max(f.width.min, Math.min(f.width.max, settings.width));
-		f.height.value = Math.max(f.height.min, Math.min(f.height.max, settings.height));
+		settings.width = Math.max(f.width.min, Math.min(f.width.max, settings.width));
+		settings.height = Math.max(f.height.min, Math.min(f.height.max, settings.height));
+		f.width.value = settings.width;
+		f.height.value = settings.height;
 	}
 	lastFile = selectedFile;
 	lastSettings = JSON.stringify(settings);
