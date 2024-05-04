@@ -32,11 +32,16 @@
 				top: 1em;
 				line-height: 0;
 			}
-			canvas {
+			#container > canvas {
 				image-rendering: optimizeSpeed;
 				image-rendering: -moz-crisp-edges;
 				image-rendering: -webkit-optimize-contrast;
 				image-rendering: optimize-contrast;
+			}
+			#container > canvas.old {
+				position: absolute;
+				left: 0;
+				top: 0;
 			}
 			progress, table {
 				width: 100%;
@@ -188,6 +193,7 @@ delan@azabani.com</a>.
 			</fieldset>
 			<div id="container">
 				<canvas width="512" height="512"></canvas>
+				<canvas width="512" height="512" class="old" hidden></canvas>
 			</div>
 		</form>
 		<script id="ws" type="text/x-javascript-worker">
@@ -591,10 +597,6 @@ var prod = {
 };
 var mf = {
 	render_start: function(m) {
-		// clear canvas
-		for (var i = 0; i < m.image.height * m.image.width * 4; i++)
-			m.image.data[i] = 0;
-
 		var input = {data: m.file, length: m.file.length};
 		var p = prod[m.prod](m.image);
 		for (var i = 0; i < m.options.skipbytes; i++)
@@ -653,20 +655,21 @@ function render(selectedFile, settings) {
 	if (!selectedFile) {
 		return;
 	}
+	context = canvases.current.getContext('2d');
 	if (settings.prod == 'Hilbert curve') {
-		if (settings.width < c.width) {
+		if (settings.width < canvases.current.width) {
 			// width was decreased
 			settings.width = 2 ** Math.floor(Math.log2(settings.width));
 			settings.height = settings.width;
-		} else if (settings.width > c.width) {
+		} else if (settings.width > canvases.current.width) {
 			// width was increased
 			settings.width = 2 ** Math.ceil(Math.log2(settings.width));
 			settings.height = settings.width;
-		} else if (settings.height < c.height) {
+		} else if (settings.height < canvases.current.height) {
 			// height was decreased
 			settings.height = 2 ** Math.floor(Math.log2(settings.height));
 			settings.width = settings.height;
-		} else if (settings.height > c.height) {
+		} else if (settings.height > canvases.current.height) {
 			// height was increased
 			settings.height = 2 ** Math.ceil(Math.log2(settings.height));
 			settings.width = settings.height;
@@ -685,13 +688,15 @@ function render(selectedFile, settings) {
 	lastSettings = JSON.stringify(settings);
 
 	p.value = 0;
-	var image = t.getImageData(0, 0, c.width, c.height);
-	c.width = settings.width;
-	c.height = settings.height;
-	t.putImageData(image, 0, 0);
+	canvases.current.width = settings.width;
+	canvases.current.height = settings.height;
+	canvases.current.classList.remove("old");
+	canvases.current.hidden = false;
+	canvases.old.classList.add("old");
+	canvases.old.hidden = false;
 	var z = Math.pow(2, settings.zoom);
-	c.style.width = (settings.width * z) + 'px';
-	c.style.height = (settings.height * z) + 'px';
+	canvases.current.style.width = (settings.width * z) + 'px';
+	canvases.current.style.height = (settings.height * z) + 'px';
 	log('render start requested; loading file');
 	restartWorkerIfNeeded();
 	var reader = new FileReader;
@@ -702,7 +707,7 @@ function render(selectedFile, settings) {
 			type: 'render_start',
 			cons: settings.cons,
 			prod: settings.prod,
-			image: t.getImageData(0, 0, c.width, c.height),
+			image: context.getImageData(0, 0, canvases.current.width, canvases.current.height),
 			file: e.target.result,
 			options: {
 				alpha: settings.alpha,
@@ -728,9 +733,12 @@ function restartWorkerIfNeeded() {
 	}
 }
 var f = $$('form').elements;
-var c = $$('canvas');
+var canvases = {
+	current: $('canvas')[0],
+	old: $('canvas')[1],
+};
 var p = $$('progress');
-var t = c.getContext('2d');
+var context = null;
 var w = null;
 var workerBusy = false;
 var lastFile = null;
@@ -742,8 +750,13 @@ var mf = {
 	render_done: function(m) {
 		workerBusy = false;
 		log('rendering complete; painting started');
-		t.putImageData(m.image, 0, 0);
+		context.putImageData(m.image, 0, 0);
 		p.value = 1;
+		canvases.current.hidden = false;
+		canvases.old.hidden = true;
+		var swap = canvases.current;
+		canvases.current = canvases.old;
+		canvases.old = swap;
 		log('painting complete');
 	},
 };
