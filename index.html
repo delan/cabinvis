@@ -42,7 +42,7 @@
 			td:nth-child(2) {
 				text-align: right;
 			}
-			td[colspan="2"] {
+			td.hint {
 				padding-left: 2em;
 				font-style: italic;
 			}
@@ -70,6 +70,9 @@
 				margin: 0;
 				padding: 0;
 				list-style: '';
+			}
+			#lockedToPowersOfTwo td {
+				padding-bottom: 1em;
 			}
 		</style>
 	</head>
@@ -111,22 +114,18 @@ delan@azabani.com</a>.
 					<div>
 					<table>
 					<tr>
-					<td>Image width:
-					<td><input type="number" min="1"
-						step="1" name="width"
-						value="512">
-					<tr>
-					<td>Image height:
-					<td><input type="number" min="1"
-						step="1" name="height"
-						value="512">
+					<td colspan="2">
+						<input type="number" min="1" max="4096" step="1" name="width" value="512">
+						× <input type="number" min="1" max="4096" step="1" name="height" value="512">
+					<tr id="lockedToPowersOfTwo" hidden>
+						<td colspan="2"><strong>(Hilbert curve — locked to powers of two)</strong>
 					<tr>
 					<td>Skip input bytes:
 					<td><input type="number" min="0"
 						step="1" name="skipbytes"
 						value="0">
 					<tr>
-					<td colspan="2">Start at a certain
+					<td colspan="2" class="hint">Start at a certain
 						offset in the input file.
 					<tr>
 					<td>Default alpha:
@@ -134,7 +133,7 @@ delan@azabani.com</a>.
 						max="255" step="1" name="alpha"
 						value="255">
 					<tr>
-					<td colspan="2">Configure a global
+					<td colspan="2" class="hint">Configure a global
 						opacity value for consumers that
 						do not care about opacity.
 					<tr>
@@ -143,7 +142,7 @@ delan@azabani.com</a>.
 						min="-3" max="3" value="0"
 						step="1">
 					<tr>
-					<td colspan="2">From 12.5% to 800%
+					<td colspan="2" class="hint">From 12.5% to 800%
 						inclusive, doubling in each
 						step. If you see a text box
 						instead of a slider above, enter
@@ -628,11 +627,36 @@ function on_change(e) {
 	}
 }
 function render() {
+	$$("#lockedToPowersOfTwo").hidden = (f.prod.value != 'Hilbert curve');
 	if (!f.file.files[0]) {
 		return;
 	}
 	p.value = 0;
 	var image = t.getImageData(0, 0, c.width, c.height);
+	if (f.prod.value == 'Hilbert curve') {
+		if (f.width.value < c.width) {
+			// width was decreased
+			f.width.value = 2 ** Math.floor(Math.log2(f.width.value));
+			f.height.value = f.width.value;
+		} else if (f.width.value > c.width) {
+			// width was increased
+			f.width.value = 2 ** Math.ceil(Math.log2(f.width.value));
+			f.height.value = f.width.value;
+		} else if (f.height.value < c.height) {
+			// height was decreased
+			f.height.value = 2 ** Math.floor(Math.log2(f.height.value));
+			f.width.value = f.height.value;
+		} else if (f.height.value > c.height) {
+			// height was increased
+			f.height.value = 2 ** Math.ceil(Math.log2(f.height.value));
+			f.width.value = f.height.value;
+		} else {
+			let width = 2 ** Math.floor(Math.log2(f.width.value));
+			let height = 2 ** Math.floor(Math.log2(f.height.value));
+			f.width.value = Math.min(width, height);
+			f.height.value = Math.min(width, height);
+		}
+	}
 	c.width = f.width.value;
 	c.height = f.height.value;
 	t.putImageData(image, 0, 0);
