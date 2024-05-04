@@ -571,7 +571,7 @@ addEventListener('message', function(e) {
 	mf[e.data.type](e.data);
 }, false);
 postMessage({
-	type: 'worker_ready',
+	type: 'populate_ui',
 	cons_names: object_keys(cons),
 	prod_names: object_keys(prod)
 });
@@ -617,12 +617,11 @@ function render() {
 	c.style.width = (f.width.value * z) + 'px';
 	c.style.height = (f.height.value * z) + 'px';
 	log('render start requested; loading file');
-	$('input').forEach(function(i) {
-		i.disabled = true;
-	});
+	restartWorkerIfNeeded();
 	var reader = new FileReader;
 	reader.addEventListener('load', function(e) {
 		log('file loaded; rendering started');
+		workerBusy = true;
 		w.postMessage({
 			type: 'render_start',
 			cons: radio_value(f.cons),
@@ -637,20 +636,35 @@ function render() {
 	}, false);
 	reader.readAsBinaryString(f.file.files[0]);
 }
+function restartWorkerIfNeeded() {
+	if (w != null && workerBusy) {
+		log('terminating worker');
+		w.terminate();
+	}
+	if (w == null || workerBusy) {
+		log('starting worker');
+		var blob = new Blob([$$('#ws').textContent]);
+		w = new Worker((this.URL || this.webkitURL).createObjectURL(blob));
+		w.addEventListener('message', function(e) {
+			log('received message:', e.data.type);
+			mf[e.data.type](e.data);
+		}, false);
+	}
+}
 var f = $$('form').elements;
 var c = $$('canvas');
 var p = $$('progress');
 var t = c.getContext('2d');
-var w = (function() {
-	var blob = new Blob([$$('#ws').textContent]);
-	return new Worker((this.URL || this.webkitURL).
-		createObjectURL(blob));
-})();
+var w = null;
+var workerBusy = false;
+var uiPopulated = false;
 var mf = {
 	worker_progress: function(m) {
 		p.value = m.value;
 	},
-	worker_ready: function(m) {
+	populate_ui: function(m) {
+		if (uiPopulated) return;
+		uiPopulated = true;
 		function populate(namelist, fieldname, element) {
 			for (var i = 0; i < namelist.length; i++) {
 				var o = document.createElement('input');
@@ -671,28 +685,26 @@ var mf = {
 		}
 		populate(m.cons_names, 'cons', $$('#cons_p'));
 		populate(m.prod_names, 'prod', $$('#prod_p'));
-		render();
 		$('input:not([type=range])').forEach(function(i) {
 			i.addEventListener('change', on_change, false);
 		});
 		$('input[type=range]').forEach(function(i) {
 			$n(i).addEventListener('click', on_change, false);
 		});
+		render();
 	},
 	render_done: function(m) {
+		workerBusy = false;
 		log('rendering complete; painting started');
 		t.putImageData(m.image, 0, 0);
 		p.value = 1;
 		log('painting complete');
-		$('input').forEach(function(i) {
-			i.disabled = false;
-		});
 	},
 };
-w.addEventListener('message', function(e) {
-	log('received message:', e.data.type);
-	mf[e.data.type](e.data);
-}, false);
+
+// start the worker once, just to get the populate_ui message.
+restartWorkerIfNeeded();
+
 $$('#container').style.backgroundImage = 'url(' +
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAA' +
 	'Bb59j9AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAABnUlEQVR4nO3bsQ0DIRQF' +
