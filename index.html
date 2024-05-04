@@ -79,10 +79,8 @@
 					</div>
 				</section>
 				<section>
-					<h2>About</h2>
-					<div>
 						<p>
-Cabinvis is a <span title="Single file, under 20 KB and 1000 SLOC!">small</span>
+Cabinvis is a small
 web application that allows you to render the contents of files as images. You
 can use this to interpret raw image data, or to simply make a 'birds-eye'
 observation of patterns in the contents of a file.
@@ -92,39 +90,19 @@ Inspired by Aldo Cortesi's blog post
 binaries with space-filling curves</a>, I decided to create a utility that would
 allow me to do this, on the convenient platform that is the web.
 						<p>
-It uses canvas for the image output, web workers for processing, the FileReader
-interface to access files, and the BlobBuilder interface to include the worker
-script inside the same file as everything else. It is currently tested and
-supported in Firefox and Chrome. If you want to use it on Chrome locally, you
-must disable the same-origin policy with <code>--disable-web-security</code>.
-						<p>
-The bulk of the code is divided between 'consumers' and 'producers', which are
-objects with their own internal state. When rendering the image, the chosen
-consumer reads bytes in, and when a pixel is ready, sends it to the chosen
-producer, which draws the pixel onto the canvas in some specified arrangement.
-						<p>
 Here are some examples:
 	<a href="http://i.imgur.com/0lFNt.png">objdump.exe</a>,
 	<a href="http://i.imgur.com/fSWGv.png">cmd.exe</a>,
 	<a href="http://i.imgur.com/kzEoE.png">colorui.dll</a>.
 						<p>
-This program is released under the terms of the MIT license. Please send any
+This program is released under the terms of the ISC license. Please send any
 questions, suggestions or comments to <a href="mailto:delan@azabani.com">
 delan@azabani.com</a>.
-					</div>
 				</section>
 				<section>
-					<h2>Step 1: Choose a file</h2>
 					<div>
-					<p>Select a file on your computer to
-					render. No data is uploaded to any
-					external server; everything is done
-					client-side.
 					<p><input type="file" name="file">
 					</div>
-				</section>
-				<section>
-					<h2>Step 2: Configure canvas</h2>
 					<div>
 					<table>
 					<tr>
@@ -172,30 +150,8 @@ delan@azabani.com</a>.
 					</div>
 				</section>
 				<section id="cons_p">
-					<h2>Step 3: Choose a consumer</h2>
-					<div>
-					<p>The consumer you use defines how the
-					bytes from the input file are
-					interpreted. For example, RGBX reads
-					four bytes at a time, uses the first
-					three to create an RGB pixel, and
-					discards the fourth. 'Byte class' maps
-					each byte to a pixel of one of four
-					colours.
-					</p>
-					</div>
 				</section>
 				<section id="prod_p">
-					<h2>Step 4: Choose a producer</h2>
-					<div>
-					<p>The producer arranges the incoming
-					pixels from the consumer in a certain
-					layout. The Hilbert curve producer is
-					interesting in that it maximises
-					locality; pixels that are close to each
-					other in the file are close to each
-					other on the image.
-					</div>
 				</section>
 			</fieldset>
 			<div id="container">
@@ -708,19 +664,8 @@ var mf = {
 				element.appendChild(b);
 			}
 		}
-		function section_click(e) {
-			$('section:not(:first-child) div').forEach(
-				function(i) {
-					i.style.display = 'none';
-			});
-			$n(e.target).style.display = 'block';
-		}
-		section_click({target: $$('section:nth-child(2) h2')});
-		populate(m.cons_names, 'cons', $$('#cons_p div'));
-		populate(m.prod_names, 'prod', $$('#prod_p div'));
-		$('h2').forEach(function(i) {
-			i.addEventListener('click', section_click, false);
-		});
+		populate(m.cons_names, 'cons', $$('#cons_p'));
+		populate(m.prod_names, 'prod', $$('#prod_p'));
 		$('input:not([type=range])').forEach(function(i) {
 			i.addEventListener('change', invoke_render, false);
 		});
