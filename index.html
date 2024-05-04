@@ -133,7 +133,6 @@ delan@azabani.com</a>.
 					<td><input type="range" min="0"
 						max="255" step="1" name="alpha"
 						value="255">
-					<input type="button" value="✓">
 					<tr>
 					<td colspan="2">Configure a global
 						opacity value for consumers that
@@ -143,7 +142,6 @@ delan@azabani.com</a>.
 					<td><input type="range" name="zoom"
 						min="-3" max="3" value="0"
 						step="1">
-					<input type="button" value="✓">
 					<tr>
 					<td colspan="2">From 12.5% to 800%
 						inclusive, doubling in each
@@ -608,11 +606,6 @@ function $(s, p) {
 function $$(s) {
 	return document.querySelector(s);
 }
-function $n(n) {
-	do n = n.nextSibling;
-	while (n.nodeType != 1);
-	return n;
-}
 function log() {
 	this.console && console.log &&
 		console.log.apply(console, arguments);
@@ -699,11 +692,9 @@ var mf = {
 $('#prod_p label, #cons_p label').forEach(label => {
 	label.append(` ${label.firstChild.value}`);
 });
-$('input:not([type=range])').forEach(function(i) {
+$('input').forEach(function(i) {
 	i.addEventListener('change', on_change, false);
-});
-$('input[type=range]').forEach(function(i) {
-	$n(i).addEventListener('click', on_change, false);
+	i.addEventListener('input', on_change, false);
 });
 $$('#container').style.backgroundImage = 'url(' +
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAA' +
