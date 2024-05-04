@@ -66,6 +66,11 @@
 			section div {
 				margin-top: 1em;
 			}
+			section > ul {
+				margin: 0;
+				padding: 0;
+				list-style: '';
+			}
 		</style>
 	</head>
 	<body>
@@ -149,10 +154,34 @@ delan@azabani.com</a>.
 					</table>
 					</div>
 				</section>
-				<section id="cons_p">
-				</section>
-				<section id="prod_p">
-				</section>
+				<section id="cons_p"><ul>
+					<li><label><input type="radio" name="cons" value="Byte class (zeroes/ones/ASCII/other)"></label>
+					<li><label><input type="radio" name="cons" value="Bit value as monochrome"></label>
+					<li><label><input type="radio" name="cons" value="Byte value as gray level"></label>
+					<li><label><input type="radio" name="cons" value="RGB"></label>
+					<li><label><input type="radio" name="cons" value="BGR"></label>
+					<li><label><input type="radio" name="cons" value="RGBA"></label>
+					<li><label><input type="radio" name="cons" value="RGBX"></label>
+				</ul></section>
+				<section id="prod_p"><ul>
+					<li><label><input type="radio" name="prod" value="Hilbert curve"></label>
+					<li><label><input type="radio" name="prod" value="Top to bottom, left to right"></label>
+					<li><label><input type="radio" name="prod" value="Top to bottom, right to left"></label>
+					<li><label><input type="radio" name="prod" value="Bottom to top, left to right"></label>
+					<li><label><input type="radio" name="prod" value="Bottom to top, right to left"></label>
+					<li><label><input type="radio" name="prod" value="Left to right, top to bottom"></label>
+					<li><label><input type="radio" name="prod" value="Left to right, bottom to top"></label>
+					<li><label><input type="radio" name="prod" value="Right to left, top to bottom"></label>
+					<li><label><input type="radio" name="prod" value="Right to left, bottom to top"></label>
+					<li><label><input type="radio" name="prod" value="Horizontal zigzag, starting from top left"></label>
+					<li><label><input type="radio" name="prod" value="Horizontal zigzag, starting from top right"></label>
+					<li><label><input type="radio" name="prod" value="Horizontal zigzag, starting from bottom left"></label>
+					<li><label><input type="radio" name="prod" value="Horizontal zigzag, starting from bottom right"></label>
+					<li><label><input type="radio" name="prod" value="Vertical zigzag, starting from top left"></label>
+					<li><label><input type="radio" name="prod" value="Vertical zigzag, starting from top right"></label>
+					<li><label><input type="radio" name="prod" value="Vertical zigzag, starting from bottom left"></label>
+					<li><label><input type="radio" name="prod" value="Vertical zigzag, starting from bottom right"></label>
+				</ul></section>
 			</fieldset>
 			<div id="container">
 				<canvas width="512" height="512"></canvas>
@@ -570,11 +599,6 @@ var mf = {
 addEventListener('message', function(e) {
 	mf[e.data.type](e.data);
 }, false);
-postMessage({
-	type: 'populate_ui',
-	cons_names: object_keys(cons),
-	prod_names: object_keys(prod)
-});
 		</script>
 		<script>
 function $(s, p) {
@@ -657,41 +681,9 @@ var p = $$('progress');
 var t = c.getContext('2d');
 var w = null;
 var workerBusy = false;
-var uiPopulated = false;
 var mf = {
 	worker_progress: function(m) {
 		p.value = m.value;
-	},
-	populate_ui: function(m) {
-		if (uiPopulated) return;
-		uiPopulated = true;
-		function populate(namelist, fieldname, element) {
-			for (var i = 0; i < namelist.length; i++) {
-				var o = document.createElement('input');
-				var l = document.createElement('label');
-				var b = document.createElement('br');
-				o.type = 'radio';
-				o.name = fieldname;
-				o.id = fieldname + '_' + i;
-				o.value = namelist[i];
-				l.setAttribute('for', o.id);
-				l.textContent = ' ' + namelist[i];
-				if (i == 0)
-					o.checked = true;
-				element.appendChild(o);
-				element.appendChild(l);
-				element.appendChild(b);
-			}
-		}
-		populate(m.cons_names, 'cons', $$('#cons_p'));
-		populate(m.prod_names, 'prod', $$('#prod_p'));
-		$('input:not([type=range])').forEach(function(i) {
-			i.addEventListener('change', on_change, false);
-		});
-		$('input[type=range]').forEach(function(i) {
-			$n(i).addEventListener('click', on_change, false);
-		});
-		render();
 	},
 	render_done: function(m) {
 		workerBusy = false;
@@ -702,9 +694,15 @@ var mf = {
 	},
 };
 
-// start the worker once, just to get the populate_ui message.
-restartWorkerIfNeeded();
-
+$('#prod_p label, #cons_p label').forEach(label => {
+	label.append(` ${label.firstChild.value}`);
+});
+$('input:not([type=range])').forEach(function(i) {
+	i.addEventListener('change', on_change, false);
+});
+$('input[type=range]').forEach(function(i) {
+	$n(i).addEventListener('click', on_change, false);
+});
 $$('#container').style.backgroundImage = 'url(' +
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAB4CAYAAA' +
 	'Bb59j9AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAABnUlEQVR4nO3bsQ0DIRQF' +
@@ -718,6 +716,7 @@ $$('#container').style.backgroundImage = 'url(' +
 	'SRE0Kd4U2kvtudCkCJoUQZMiaFIETYqgSRE0KYImRdCkeFNoL7XnQpMiaFIE' +
 	'TYqgSRE0KYImRdCkCJoUQZPiTaG91J4LTYqgSRE0KYImRdCkCJoUQZMiaFIE' +
 	'TcoHt3taUX1tnMMAAAAASUVORK5CYII%3D)';
+render();
 		</script>
 	</body>
 </html>
