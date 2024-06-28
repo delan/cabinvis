@@ -163,6 +163,7 @@ delan@azabani.com</a>.
 					<li><label><input type="radio" name="cons" value="Byte class (zeroes/ones/ASCII/other)" checked></label>
 					<li><label><input type="radio" name="cons" value="Bit value as monochrome"></label>
 					<li><label><input type="radio" name="cons" value="Byte value as gray level"></label>
+					<li><label><input type="radio" name="cons" value="RGB565"></label>
 					<li><label><input type="radio" name="cons" value="RGB"></label>
 					<li><label><input type="radio" name="cons" value="BGR"></label>
 					<li><label><input type="radio" name="cons" value="RGBA"></label>
@@ -251,6 +252,18 @@ var cons = {
 			while (i.data) {
 				x = nextbyte(i);
 				p(x, x, x, opt.alpha);
+			}
+		};
+	},
+	'RGB565': function(i, o, p, opt) {
+		var s = 0, word;
+		return function() {
+			while (i.data) {
+				x = nextbyte(i);
+				switch (s) {
+				case 0: word = x; s++; break;
+				case 1: word = (word << 8) | x; p(((word >> 11) & 0x1f) << 3, ((word >> 5) & 0x3f) << 2, (word & 0x1f) << 3, opt.alpha); s = 0;
+				}
 			}
 		};
 	},
